@@ -1,52 +1,103 @@
-# Scan-docker-images-using-Trivy
-With Trivy, scan and check vulnerability of docker images and set automation tool.
+# 📦 Scan Docker Images using Trivy
 
-Container which contains a number of valuable things for all, so security about contatiner is vital factors for tech industry. Therefore, scanning images are one of the most necessary elements for developers. Also engineer who uses docker, kubernates should know how to scan images. Aquasecurity Trivy is one such tool that helps you with all of that. It is a vulnerability and security misconfiguration scanner that can scan container images, filesystems, and Git repositories, for vulnerabilities and misconfigurations within IaC, Kubernetes Manifests, and Dockerfiles. Also, why I recommend all about Trivy, this is by far one of the most lightweight and feature-rich tools.
-Today, I am gonna explore the tool "Trivy" and also set automation setting for safe container environment.
+With Trivy, scan and check vulnerability of Docker images and set automation tools to improve security.
 
-## Prerequisites
-Before installing Trivy, you need to know your platforms. Trivy runs in several Linux platforms, including RHEL/CentOs, Ubuntu/Debian, Arch Linux, MacOs, Nix, etc. 
+Container security is a critical aspect of the tech industry, as containers often hold valuable information. Scanning images for vulnerabilities is a key step in ensuring the safety of Docker containers, and Trivy by Aqua Security is a lightweight, feature-rich tool for this task.
 
-## 1. Installing Trivy
+In this guide, we will explore how to scan Docker images for vulnerabilities using Trivy and set up an automation process to optimize images, reducing vulnerabilities and ensuring a safer container environment.
+
+---
+
+## 🚀 Prerequisites
+
+Before installing Trivy, you should know your platform. Trivy runs on various Linux distributions, including:
+- **RHEL/CentOS**
+- **Ubuntu/Debian**
+- **Arch Linux**
+- **macOS**
+- **Nix**
+
+## 1️⃣ Installing Trivy
+
+### Install required packages:
+```bash
 sudo apt-get install wget apt-transport-https gnupg lsb-release
+```
 > Install package from HTTPS with gnupg which contains software for encryption and authentication
 
+Explanation:
+- `wget` - for downloading files
+- `apt-transport-https` - for HTTPS support in APT
+- `gnupg` - for encryption and authentication
+- `lsb-release` - for determining the Linux distribution version
+
+### Download and add the Trivy GPG key:
+```bash
 wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor -o /usr/share/keyrings/trivy-archive-keyring.gpg
-> Download Public Key from URL, Pipes it to gpg --dearmor to convert it to a format usable by APT.
-> Saves the converted key file as /usr/share/keyrings/trivy-archive-keyring.gpg.
+```
 
+Explanation:
+- Downloads the Trivy public key and converts it to a format usable by APT.
+
+### Add the Trivy repository:
+```bash
 echo "deb [signed-by=/usr/share/keyrings/trivy-archive-keyring.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
->Adds Trivy’s repository to system.
-> $(lsb_release -cs) automatically inserts the codename of current Ubuntu distribution
+```
 
+Explanation:
+- Adds Trivy’s repository to the system. The `$(lsb_release -cs)` automatically inserts your current Ubuntu distribution codename.
+
+### Update and install Trivy:
+```bash
 sudo apt update
 sudo apt install trivy
-> package update and install trivy
+```
 
-## 2. Pull pratice image from docker repository
+---
+
+## 2️⃣ Pull practice image from Docker Hub
+
+Pull a Docker image for testing:
+```bash
 docker pull castlehoo/my-java-app
+```
 ![image](https://github.com/user-attachments/assets/cf820075-6924-42ac-901b-42ad59c1e648)
 
+---
 
-## 3. Scan docker image using Trivy
-docker image castlehoo/my-java-app:1.0
+## 3️⃣ Scan Docker Image using Trivy
+
+Scan the Docker image:
+```bash
+docker image scan castlehoo/my-java-app:1.0
+```
 ![image](https://github.com/user-attachments/assets/8d56acc6-08d1-439a-98af-019c0d802c14)
-As you can above, There is 42 high vulnerabilities in the image.
+You will see 42 high vulnerabilities above image:
 
-## Practice : Downsize vulnerability of the image and set automation
-Using python, I Downsize vulnerability of the image and set automation. First, There are lot of ways to downsize vulnerability of the image
-  ## 1. Ways to minimize vulnerability
-  ### 1) Using the latest version package
-  Using the latest version package is vital for security. When images are updated, they do security patch. Therefore, updating version package is important
-  RUN apt-get update && apt-get upgrade -y
 
-  ### 2) Using Alpine image
-  When we use Alpine image, we can downsize the size of image. That means we can minimize the vulnerability of package.
-  FROM openjdk:17-alpine AS build
+---
 
-  ### 3) Optimization build stage
-  Distribute build and application which really need for operating system. It helps to lose weight image and strengthen security factors
-  FROM openjdk:17-alpine AS build
+
+## Ways to minimize vulnerability
+
+#### 1️⃣ Using the latest version of packages
+Always update to the latest version:
+```Dockerfile
+RUN apt-get update && apt-get upgrade -y
+```
+> Using the latest version package is vital for security. When images are updated, they do security patch. Therefore, updating version package is important
+
+#### 2️⃣ Use Alpine image
+Alpine images are smaller, thus reducing potential vulnerabilities:
+```Dockerfile
+FROM openjdk:17-alpine AS build
+```
+> When we use Alpine image, we can downsize the size of image. That means we can minimize the vulnerability of package.
+
+#### 3️⃣ Optimization through build stages
+Distribute builds and application dependencies using multi-stage builds:
+```Dockerfile
+FROM openjdk:17-alpine AS build
 WORKDIR /app
 COPY . .
 RUN javac Main.java
@@ -55,34 +106,42 @@ FROM openjdk:17-alpine
 WORKDIR /app
 COPY --from=build /app/Main.class /app/
 CMD ["java", "Main"]
+```
+> Distribute build and application which really need for operating system. It helps to lose weight image and strengthen security factors
 
-
-  ### 4) Eliminate unecessary file
-  Using .dockerignore file, we can delete files which are not necessary. Therefore, it helps to minimize the size of image and impove effectivity of image.
-  *.log
+#### 4️⃣ Eliminate unnecessary files
+Use a `.dockerignore` file to remove files that are not needed:
+```plaintext
+*.log
 *.tmp
 .git
 /tests/
 Dockerfile
 docker-compose.yml
+```
+> Using .dockerignore file, we can delete files which are not necessary. Therefore, it helps to minimize the size of image and impove effectivity of image.
 
-## 2. Setting for automation
-This code is a pipeline that uses the Trivy security scanner to scan for HIGH-level vulnerabilities in Docker images. If the number of vulnerabilities exceeds 5, an email alert is sent, and the image is optimized using multi-stage builds. After optimization, the image is re-scanned to check if the vulnerabilities have been reduced, and the result is sent via email again.
+---
+# 🛠️ Practice: Downsize Vulnerabilities & Set Automation
 
-Major Workflow:
-Vulnerability Scanning with Trivy (check_trivy_vulnerabilities)
-Sending Email Alerts (send_alert)
-Image Optimization (Multi-stage Build) (optimize_image)
-Re-scan the Optimized Image
-Send Final Result via Email
-I'll explain this code step-by-step, focusing on each function.
+### Setting up Automation
+
+The code provided below automates the vulnerability scanning process. It uses Trivy to scan for **HIGH-level** vulnerabilities. If the vulnerabilities exceed 5, an email alert is sent. The image is then optimized using multi-stage builds, re-scanned, and a final result is emailed.
+
+### Major Workflow:
+1. Vulnerability Scanning with Trivy (`check_trivy_vulnerabilities`)
+2. Sending Email Alerts (`send_alert`)
+3. Image Optimization (Multi-stage Build) (`optimize_image`)
+4. Re-scan the Optimized Image
+5. Send Final Result via Email
 
 ---
 
-1. Vulnerability Scanning with Trivy (check_trivy_vulnerabilities)
-This function runs a Trivy command to scan a Docker image for vulnerabilities of HIGH severity and filters them out.
+## 📄 Code Explanation:
 
-python
+### 🔍 Vulnerability Scanning with Trivy (`check_trivy_vulnerabilities`)
+
+```python
 def check_trivy_vulnerabilities(image_name):
     try:
         # Executes the Trivy command and retrieves the results in JSON format
@@ -97,20 +156,21 @@ def check_trivy_vulnerabilities(image_name):
     except Exception as e:
         print(f"Error running Trivy scan: {e}")
         return None  # Returns None if an error occurs
-Input: image_name is the Docker image to be scanned by Trivy.
-Process: Uses os.popen() to run the Trivy scan and filters out only the HIGH severity vulnerabilities.
-Output: Returns a list containing only the HIGH severity vulnerabilities.
-
+```
+### Input
+  -  image_name is the Docker image to be scanned by Trivy.
+### Process
+  - Uses os.popen() to run the Trivy scan and filters out only the HIGH severity vulnerabilities.
+### Output
+  - Returns a list containing only the HIGH severity vulnerabilities.
 ---
+### ✉️ Sending Email Alerts (`send_alert`)
 
-2. Sending Email Alerts (send_alert)
-This function sends the list of vulnerabilities via email. It structures the details of vulnerabilities into a table format.
-
-python
+```python
 def send_alert(image_name, high_vulns, stage="initial"):
-    from_email = "ksungho9991@gmail.com"
-    to_email = "ksungho9991@gmail.com"
-    password = "password"  # It's recommended to manage actual passwords via environment variables.
+    from_email = "your_email@gmail.com"
+    to_email = "recipient_email@gmail.com"
+    password = "password"  # Use environment variables for security.
 
     # Set the email subject
     subject = f"Alert: Docker Image {image_name} - {stage.capitalize()}"
@@ -118,9 +178,14 @@ def send_alert(image_name, high_vulns, stage="initial"):
     # Create the email body
     body = ""
     if stage == "initial":
-        body += f"Warning: Docker image {image_name} has {len(high_vulns)} HIGH vulnerabilities.\n\n"
+        body += f"Warning: Docker image {image_name} has {len(high_vulns)} HIGH vulnerabilities.
+
+"
     elif stage == "optimized":
-        body += f"The image {image_name} has been optimized.\nCurrent HIGH vulnerabilities: {len(high_vulns)}.\n\n"
+        body += f"The image {image_name} has been optimized.
+Current HIGH vulnerabilities: {len(high_vulns)}.
+
+"
 
     # Structure vulnerability details into a table
     if high_vulns:
@@ -134,7 +199,10 @@ def send_alert(image_name, high_vulns, stage="initial"):
             severity = vuln.get("Severity", "N/A")
             table.add_row([vid, pkg_name, installed_version, fixed_version, severity])
         
-        body += f"Here are the details of the HIGH vulnerabilities:\n\n{table}\n"
+        body += f"Here are the details of the HIGH vulnerabilities:
+
+{table}
+"
 
     # Set up the email
     message = MIMEMultipart()
@@ -152,25 +220,28 @@ def send_alert(image_name, high_vulns, stage="initial"):
             print(f"Email alert sent to {to_email}")
     except Exception as e:
         print(f"Failed to send email: {e}")
-Input:
-image_name: The name of the Docker image to be displayed in the email.
-high_vulns: A list of HIGH severity vulnerabilities obtained from Trivy.
-stage: Identifies whether the scan is from the initial stage or after optimization.
-Process:
-Structures vulnerability details into a table using PrettyTable.
-Sends the email containing vulnerability information.
-Output: An email alert containing the vulnerability details is sent.
+```
+### Input:
+- **image_name**: The name of the Docker image to be displayed in the email.
+- **high_vulns**: A list of HIGH severity vulnerabilities obtained from Trivy.
+- **stage**: Identifies whether the scan is from the initial stage or after optimization.
 
+### Process:
+- Structures vulnerability details into a table using `PrettyTable`.
+- Sends the email containing the vulnerability information.
+
+### Output:
+- An email alert is sent containing the vulnerability details.
 ---
+### 🛠 Image Optimization (Multi-stage Build)
 
-3. Image Optimization (Multi-stage Build) (optimize_image)
-This function optimizes the Docker image by applying multi-stage builds. First, it builds the source code and dependencies, then only copies the necessary files into the final lightweight image.
+This function optimizes the Docker image by applying multi-stage builds. It first builds the source code and dependencies, then only copies the necessary files into the final lightweight image.
 
-python
+```python
 def optimize_image(image_name):
     print("Optimizing the Docker image using multi-stage build...")
 
-    dockerfile_content = """
+    dockerfile_content = '''
     # Build stage
     FROM openjdk:17-alpine AS build
 
@@ -194,7 +265,7 @@ def optimize_image(image_name):
 
     # Run the application
     CMD ["java", "Main"]
-    """
+    '''
 
     # Create Dockerfile
     with open("Dockerfile", "w") as f:
@@ -202,23 +273,28 @@ def optimize_image(image_name):
 
     # Build the image without using cache
     os.system(f"docker build --no-cache -t {image_name}_optimized .")
-Input: image_name is the name of the Docker image to be optimized.
-Process:
-Builds the source code using Alpine base images for a smaller size.
-Copies only the necessary files into the final stage to minimize the image size.
-Output: Builds the optimized Docker image.
+```
 
+### Input:
+- **image_name**: The name of the Docker image to be optimized.
+
+### Process:
+- Builds the source code using Alpine base images for a smaller size.
+- Copies only the necessary files into the final stage to minimize the image size.
+
+### Output:
+- Builds the optimized Docker image.
 ---
+### 🔄 Main Logic
 
-4. Main Logic (__main__)
 This section controls the overall process:
 
-Runs Trivy to check for HIGH severity vulnerabilities.
-If the vulnerabilities exceed 5, sends an email alert.
-Optimizes the Docker image.
-Re-scans the optimized image and sends the results via email.
+- Runs Trivy to check for HIGH severity vulnerabilities.
+- If the vulnerabilities exceed 5, sends an email alert.
+- Optimizes the Docker image.
+- Re-scans the optimized image and sends the results via email.
 
-python
+```python
 if __name__ == "__main__":
     image_name = "castlehoo/my-java-app:1.0"
     
@@ -247,21 +323,32 @@ if __name__ == "__main__":
             print(f"Image {image_name} has acceptable HIGH vulnerabilities ({len(high_vulns)}).")
     else:
         print(f"Failed to check vulnerabilities for image {image_name}")
+```
 
 ---
 
-Summary of Key Features:
-Trivy Vulnerability Scanning: Scans Docker images for HIGH severity vulnerabilities.
-Email Alerts: Sends the number of vulnerabilities and their details via email in table format.
-Image Optimization: Applies multi-stage builds to optimize and reduce image size.
-Re-scan and Alerts: Re-scans the optimized image and sends the result via email.
-This code helps to efficiently manage Docker images by automating the vulnerability scanning and optimization process, ensuring the image is as secure and lightweight as possible.
+## 📝 Summary of Key Features:
 
+- **Trivy Vulnerability Scanning**: Scans Docker images for HIGH severity vulnerabilities.
+- **Email Alerts**: Sends the number of vulnerabilities and their details via email in a table format.
+- **Image Optimization**: Applies multi-stage builds to optimize and reduce image size.
+- **Re-scan and Alerts**: Re-scans the optimized image and sends the result via email.
 
-## 3. Results
-Before
+This process helps to efficiently manage Docker images by automating the vulnerability scanning and optimization process, ensuring that the image is as secure and lightweight as possible.
+
+---
+
+## 📊 Results:
+
+### Before:
 ![image](https://github.com/user-attachments/assets/1cc11d28-4fad-4910-a9e6-f9d09b618c54)
-After
+
+### After:
 ![image](https://github.com/user-attachments/assets/55d278a2-7d3b-411b-af7d-e70592b6eb5a)
-When you see two pictures above, there is a 56% of minimizng vulnerability of image.
+
+### When you see the two pictures above, there is a 56% reduction in the vulnerability count of the image! 🚀🔐
+---
+
+## Conclusion:
+### This process helps in the automation of Docker image security scanning with Trivy, providing alerts when vulnerabilities are detected and optimizing Docker images to reduce the attack surface.
 
