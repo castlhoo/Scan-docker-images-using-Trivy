@@ -350,5 +350,5 @@ This process helps to efficiently manage Docker images by automating the vulnera
 ---
 
 ## Conclusion:
-### This process helps in the automation of Docker image security scanning with Trivy, providing alerts when vulnerabilities are detected and optimizing Docker images to reduce the attack surface.
+### This process provides a comprehensive understanding of how to use Trivy effectively. In addition, I designed an automated workflow for Docker image security scanning with Trivy, which includes sending alerts when vulnerabilities are detected and optimizing Docker images to reduce the attack surface. This practice encouraged me to think creatively about using Trivy. As a result, I’m confident that my ability to interpret and work with containers has improved significantly.
 
